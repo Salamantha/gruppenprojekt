@@ -26,6 +26,11 @@ export async function POST(
   const knowsRecipeRaw = formData.get("knowsRecipe");
   const participantKnowsRecipe = knowsRecipeRaw === null ? undefined : knowsRecipeRaw === "true";
 
+  console.log(
+    `[transcribe] trial=${trialId} audioBytes=${audio.size} mimeType=${audioMimeType} ` +
+      `clientDurationMs=${audioDurationMs} knowsRecipe=${participantKnowsRecipe}`
+  );
+
   try {
     const rawTranscript = await transcribeAudio(audio, `trial-${trialId}.${extension}`, {
       participantKnowsRecipe,
