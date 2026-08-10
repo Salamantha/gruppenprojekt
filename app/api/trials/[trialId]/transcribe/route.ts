@@ -27,7 +27,9 @@ export async function POST(
   const participantKnowsRecipe = knowsRecipeRaw === null ? undefined : knowsRecipeRaw === "true";
 
   try {
-    const rawTranscript = await transcribeAudio(audio, `trial-${trialId}.${extension}`);
+    const rawTranscript = await transcribeAudio(audio, `trial-${trialId}.${extension}`, {
+      participantKnowsRecipe,
+    });
 
     await prisma.trial.update({
       where: { id: trialId },

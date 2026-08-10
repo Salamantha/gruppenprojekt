@@ -2,7 +2,12 @@ import { toFile } from "openai";
 import { getOpenAIClient } from "@/lib/openai-client";
 
 const WHISPER_MODEL = "whisper-1";
-const MIN_PLAUSIBLE_WORDS = 5;
+// A participant who says they don't know the recipe may honestly reply with
+// something very short ("Das weiß ich leider nicht") — don't reject that as
+// unclear audio. Only apply the stricter word-count floor when they're
+// actually expected to describe a recipe.
+const MIN_PLAUSIBLE_WORDS_DEFAULT = 5;
+const MIN_PLAUSIBLE_WORDS_DOESNT_KNOW = 2;
 
 // Whisper is trained on a lot of YouTube caption data and tends to hallucinate
 // these exact boilerplate captions when given silent or near-silent audio
@@ -20,10 +25,10 @@ const HALLUCINATION_PATTERNS = [
 export class TranscriptionError extends Error {}
 export class TranscriptionUnclearError extends TranscriptionError {}
 
-function isLikelyHallucination(text: string): boolean {
+function isLikelyHallucination(text: string, minWords: number): boolean {
   const normalized = text.trim().toLowerCase();
   if (normalized.length === 0) return true;
-  if (normalized.split(/\s+/).length < MIN_PLAUSIBLE_WORDS) return true;
+  if (normalized.split(/\s+/).length < minWords) return true;
   return HALLUCINATION_PATTERNS.some((pattern) => normalized.includes(pattern));
 }
 
@@ -37,7 +42,11 @@ function isLikelyHallucination(text: string): boolean {
  * participant to simply re-record instead of pushing hallucinated text
  * through recipe generation.
  */
-export async function transcribeAudio(audio: Blob, filename: string): Promise<string> {
+export async function transcribeAudio(
+  audio: Blob,
+  filename: string,
+  options?: { participantKnowsRecipe?: boolean }
+): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
     throw new TranscriptionError("OPENAI_API_KEY is not set");
   }
@@ -53,10 +62,17 @@ export async function transcribeAudio(audio: Blob, filename: string): Promise<st
     text = result.text.trim();
   } catch (err) {
     const message = err instanceof Error ? err.message : "Whisper transcription failed";
+    console.error(`[whisper] transcription request failed: ${message}`);
     throw new TranscriptionError(message);
   }
 
-  if (isLikelyHallucination(text)) {
+  const minWords =
+    options?.participantKnowsRecipe === false ? MIN_PLAUSIBLE_WORDS_DOESNT_KNOW : MIN_PLAUSIBLE_WORDS_DEFAULT;
+
+  if (isLikelyHallucination(text, minWords)) {
+    console.warn(
+      `[whisper] rejected as unclear/hallucinated (minWords=${minWords}): ${JSON.stringify(text.slice(0, 200))}`
+    );
     throw new TranscriptionUnclearError(
       "No clear speech was detected in the recording (or Whisper produced a known hallucination artifact)."
     );
