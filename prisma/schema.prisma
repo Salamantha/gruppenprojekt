@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StudyCondition {
+  CONTROL
+  FLAWED
+}
+
+enum MistakeType {
+  WRONG_QUANTITY
+  WRONG_UNIT
+  OMITTED_INGREDIENT
+  OMITTED_STEP
+  HALLUCINATED_INGREDIENT
+  HALLUCINATED_STEP
+  WRONG_TIME_OR_TEMPERATURE
+}
+
+enum MistakeTargetField {
+  INGREDIENT
+  STEP
+}
+
+enum TrialStatus {
+  CREATED
+  RECORDED
+  TRANSCRIBED
+  GENERATED
+  ANSWERED
+  FAILED
+}
+
+model Participant {
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  consentGivenAt    DateTime?
+  completedAt       DateTime?
+  /// Pre-shuffled sequence of conditions, e.g. ["CONTROL","FLAWED",...], popped one per trial
+  conditionSequence Json
+  userAgent         String?
+
+  trials        Trial[]
+  questionnaire QuestionnaireResponse?
+}
+
+model RecipePrompt {
+  id     String @id @default(cuid())
+  title  String @unique
+  /// German script the participant reads aloud
+  promptText String @db.Text
+  /// Ground-truth Recipe JSON (title/ingredients/steps) used to ground Call A against ASR noise
+  structuredReference Json
+  isActive            Boolean @default(true)
+
+  trials Trial[]
+}
+
+model Trial {
+  id            String       @id @default(uuid())
+  participantId String
+  participant   Participant  @relation(fields: [participantId], references: [id])
+  promptId      String
+  prompt        RecipePrompt @relation(fields: [promptId], references: [id])
+
+  order     Int
+  condition StudyCondition
+  status    TrialStatus    @default(CREATED)
+
+  audioMimeType   String?
+  audioDurationMs Int?
+  rawTranscript   String? @db.Text
+  /// Call A output: the clean, unmutated recipe
+  cleanRecipe Json?
+  /// What was actually shown to the participant (== cleanRecipe for CONTROL, mutated for FLAWED)
+  displayRecipe Json?
+
+  // Ground truth — never sent to the client mid-study
+  mistakeType                MistakeType?
+  mistakeTargetField         MistakeTargetField?
+  mistakeTargetIndex         Int?
+  /// "name" | "quantity" | "unit" | "text"
+  mistakeSubfield            String?
+  mistakeOriginalValue       String?
+  mistakeNewValue            String?
+  generationFallbackOccurred Boolean              @default(false)
+
+  // Participant response
+  participantAnswerIsFlawed Boolean?
+  /// FlaggedItem[]: {field:"INGREDIENT"|"STEP", index:number} — index -1 = "etwas fehlt" meta-flag
+  participantFlaggedItems Json?
+
+  // Scoring, computed server-side on answer
+  isCorrectDetection    Boolean?
+  isCorrectLocalization Boolean?
+  isFalsePositive       Boolean?
+
+  recordingStartedAt DateTime?
+  recordingEndedAt   DateTime?
+  reviewStartedAt    DateTime?
+  answeredAt         DateTime?
+  timeSpentReviewMs  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([participantId])
+}
+
+model QuestionnaireResponse {
+  id            String      @id @default(uuid())
+  participantId String      @unique
+  participant   Participant @relation(fields: [participantId], references: [id])
+
+  ageRange              String
+  occupationCategory    String
+  selfRatedCookingSkill Int
+  /// "Wie gut denken Sie, haben Sie abgeschnitten?" 1-5
+  selfRatedPerformance Int
+  /// Nie | Selten | Monatlich | Woechentlich | Taeglich
+  llmUsageFrequency String
+  /// Immer | Meistens | Manchmal | Selten | Nie
+  proofreadsLlmOutput String
+  trustInAiAccuracy   Int
+  additionalComments  String? @db.Text
+
+  createdAt DateTime @default(now())
+}
