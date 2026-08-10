@@ -1,4 +1,4 @@
-# Rezept-Studie
+# Rezept-Studie 
 
 Eine mobile-first Next.js-Studien-App: Jede:r Teilnehmende bekommt 3 zufaellig aus einem Pool von 6
 gaengigen Gerichten ausgewaehlte Rezepte (z.B. Pfannkuchen, Nudeln, Ruehrei) und beschreibt pro Rezept
