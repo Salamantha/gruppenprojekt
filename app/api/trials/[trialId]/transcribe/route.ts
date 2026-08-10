@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { transcribeAudio } from "@/lib/whisper";
+import { transcribeAudio, TranscriptionUnclearError } from "@/lib/whisper";
 
 export const maxDuration = 60;
 
@@ -23,6 +23,8 @@ export async function POST(
   const audioMimeType = audio.type || "audio/webm";
   const audioDurationMs = Number(formData.get("durationMs") ?? 0) || null;
   const extension = audioMimeType.includes("mp4") ? "mp4" : audioMimeType.includes("aac") ? "aac" : "webm";
+  const knowsRecipeRaw = formData.get("knowsRecipe");
+  const participantKnowsRecipe = knowsRecipeRaw === null ? undefined : knowsRecipeRaw === "true";
 
   try {
     const rawTranscript = await transcribeAudio(audio, `trial-${trialId}.${extension}`);
@@ -33,6 +35,7 @@ export async function POST(
         rawTranscript,
         audioMimeType,
         audioDurationMs,
+        participantKnowsRecipe,
         recordingEndedAt: new Date(),
         status: "TRANSCRIBED",
       },
@@ -40,6 +43,14 @@ export async function POST(
 
     return NextResponse.json({ status: "TRANSCRIBED" });
   } catch (err) {
+    if (err instanceof TranscriptionUnclearError) {
+      // Don't mark the trial FAILED — let the participant simply re-record the same prompt.
+      await prisma.trial.update({ where: { id: trialId }, data: { status: "CREATED" } });
+      return NextResponse.json(
+        { error: "unclear_audio", message: "Keine verständliche Sprache erkannt." },
+        { status: 422 }
+      );
+    }
     await prisma.trial.update({ where: { id: trialId }, data: { status: "FAILED" } });
     const message = err instanceof Error ? err.message : "Transcription failed";
     return NextResponse.json({ error: message }, { status: 502 });

@@ -24,8 +24,7 @@ export async function POST(
   }
 
   try {
-    const referenceRecipe = trial.prompt.structuredReference as unknown as Recipe;
-    const cleanRecipe = await generateCleanRecipe(trial.rawTranscript, referenceRecipe);
+    const cleanRecipe = await generateCleanRecipe(trial.rawTranscript, trial.prompt.title);
 
     let displayRecipe: Recipe = cleanRecipe;
     let mistakeData = {

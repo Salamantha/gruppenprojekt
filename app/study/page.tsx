@@ -15,7 +15,6 @@ interface TrialState {
   order: number;
   totalTrials: number;
   promptTitle: string;
-  promptText: string;
 }
 
 export default function StudyPage() {
@@ -27,6 +26,8 @@ export default function StudyPage() {
   const [answeredNein, setAnsweredNein] = useState(false);
   const [flaggedItems, setFlaggedItems] = useState<FlaggedItem[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryNotice, setRetryNotice] = useState<string | null>(null);
+  const [knowsRecipe, setKnowsRecipe] = useState<boolean | null>(null);
 
   const loadNextTrial = useCallback(
     async (pid: string) => {
@@ -35,6 +36,8 @@ export default function StudyPage() {
       setAnsweredNein(false);
       setFlaggedItems([]);
       setErrorMessage(null);
+      setRetryNotice(null);
+      setKnowsRecipe(null);
       try {
         const res = await fetch("/api/trials", {
           method: "POST",
@@ -73,16 +76,23 @@ export default function StudyPage() {
   const handleRecordingComplete = async (blob: Blob, mimeType: string, durationMs: number) => {
     if (!trial) return;
     setPhase("transcribing");
+    setRetryNotice(null);
     try {
       const form = new FormData();
       const ext = mimeType.includes("mp4") ? "mp4" : "webm";
       form.append("audio", blob, `recording.${ext}`);
       form.append("durationMs", String(durationMs));
+      if (knowsRecipe !== null) form.append("knowsRecipe", String(knowsRecipe));
 
       const transcribeRes = await fetch(`/api/trials/${trial.trialId}/transcribe`, {
         method: "POST",
         body: form,
       });
+      if (transcribeRes.status === 422) {
+        setRetryNotice("Wir konnten leider keine verständliche Sprache erkennen. Bitte sprich näher am Mikrofon und lies den Text noch einmal laut vor.");
+        setPhase("prompt");
+        return;
+      }
       if (!transcribeRes.ok) throw new Error("transcribe failed");
 
       setPhase("generating");
@@ -153,14 +163,41 @@ export default function StudyPage() {
 
       {phase === "prompt" && trial && (
         <div className="w-full max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center gap-6">
-          <div className="text-center">
-            <h2 className="text-xl font-bold mb-2">{trial.promptTitle}</h2>
-            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">
-              Bitte lies den folgenden Text laut vor
-            </p>
-            <p className="text-gray-700 leading-relaxed">{trial.promptText}</p>
-          </div>
-          <RecordButton onRecordingComplete={handleRecordingComplete} />
+          {knowsRecipe === null ? (
+            <>
+              <h2 className="text-xl font-bold text-center">Kennst du ein Rezept für {trial.promptTitle}?</h2>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setKnowsRecipe(true)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold"
+                >
+                  Ja
+                </button>
+                <button
+                  onClick={() => setKnowsRecipe(false)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold"
+                >
+                  Nein
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center">
+                <h2 className="text-xl font-bold mb-2">{trial.promptTitle}</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  Beschreibe in maximal einer Minute, wie man {trial.promptTitle} zubereitet — so, wie du es aus dem
+                  Gedächtnis erklären würdest.
+                </p>
+              </div>
+              {retryNotice && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-center">
+                  {retryNotice}
+                </p>
+              )}
+              <RecordButton onRecordingComplete={handleRecordingComplete} />
+            </>
+          )}
         </div>
       )}
 

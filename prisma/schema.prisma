@@ -51,13 +51,10 @@ model Participant {
 }
 
 model RecipePrompt {
-  id     String @id @default(cuid())
-  title  String @unique
-  /// German script the participant reads aloud
-  promptText String @db.Text
-  /// Ground-truth Recipe JSON (title/ingredients/steps) used to ground Call A against ASR noise
-  structuredReference Json
-  isActive            Boolean @default(true)
+  id    String  @id @default(cuid())
+  /// Common dish name shown to the participant, e.g. "Pfannkuchen"
+  title String  @unique
+  isActive Boolean @default(true)
 
   trials Trial[]
 }
@@ -72,6 +69,9 @@ model Trial {
   order     Int
   condition StudyCondition
   status    TrialStatus    @default(CREATED)
+
+  /// Self-reported: did the participant say they know a recipe for this dish, before recording
+  participantKnowsRecipe Boolean?
 
   audioMimeType   String?
   audioDurationMs Int?

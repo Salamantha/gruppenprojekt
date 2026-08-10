@@ -63,28 +63,31 @@ const flawedRecipeJsonSchema = {
 } as const;
 
 /**
- * Call A: turns a raw German ASR transcript into a strict, structured recipe,
- * grounded against the known reference recipe so ASR noise can't corrupt
- * even CONTROL-condition trials.
+ * Call A: turns a raw German ASR transcript of a participant FREELY describing
+ * (from memory, in their own words) how to make a given dish into a strict,
+ * structured recipe. There is no reference recipe to ground against — the
+ * participant's own description, however they phrased it, is the source of
+ * truth. This only structures what was actually said; it must not invent or
+ * correct content beyond fixing obvious ASR transcription errors.
  */
-export async function generateCleanRecipe(
-  transcript: string,
-  referenceRecipe: Recipe
-): Promise<Recipe> {
+export async function generateCleanRecipe(transcript: string, dishName: string): Promise<Recipe> {
   const res = await getOpenAIClient().chat.completions.create({
     model: OPENAI_MODEL,
     messages: [
       {
         role: "system",
         content:
-          "Du bekommst die automatische Transkription einer laut vorgelesenen Rezeptvorlage sowie das Referenzrezept, von dem vorgelesen wurde. " +
-          "Rekonstruiere das Rezept exakt so, wie es im Referenzrezept steht, und nutze die Transkription nur zur Bestätigung. " +
-          "Füge keine neuen Zutaten oder Schritte hinzu und lasse keine aus. Korrigiere ausschließlich offensichtliche Erkennungsfehler der Transkription. " +
+          "Du bekommst die automatische Transkription einer mündlichen, freien Beschreibung eines Rezepts durch eine Person, " +
+          "die aus dem Gedächtnis erklärt, wie man ein bestimmtes Gericht zubereitet. Strukturiere ausschließlich das, was tatsächlich " +
+          "gesagt wurde, als Rezept mit Titel, Zutaten (Name, Menge, Einheit) und Zubereitungsschritten. " +
+          "Erfinde oder ergänze KEINE Zutaten, Mengen oder Schritte, die nicht erwähnt wurden — auch nicht scheinbar naheliegende. " +
+          "Wenn eine Menge oder Einheit nicht genannt wurde, trage einen leeren String ein. Korrigiere ausschließlich offensichtliche " +
+          "Erkennungsfehler der Spracherkennung (z.B. falsch erkannte Wörter), nicht den inhaltlichen Aufbau des Rezepts. " +
           "Antworte ausschließlich mit dem strukturierten Rezept.",
       },
       {
         role: "user",
-        content: JSON.stringify({ transcript, reference_recipe: referenceRecipe }),
+        content: JSON.stringify({ dish_name: dishName, transcript }),
       },
     ],
     response_format: {

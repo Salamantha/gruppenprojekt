@@ -1,11 +1,13 @@
 # Rezept-Studie
 
-Eine mobile-first Next.js-Studien-App: Teilnehmende lesen kurze Rezepte laut vor, die Aufnahme wird
-per **OpenAI Whisper** transkribiert, per **OpenAI** in ein strukturiertes Rezept umgewandelt und
-(in der Haelfte der Faelle) mit einem gezielt eingebauten, praezise nachverfolgten Fehler versehen.
-Teilnehmende beurteilen, ob das Rezept korrekt ist, und koennen die vermutete Fehlerstelle markieren.
-Am Ende steht ein kurzer Fragebogen. Alle Daten landen strukturiert in Postgres (via Prisma) fuer die
-statistische Auswertung.
+Eine mobile-first Next.js-Studien-App: Jede:r Teilnehmende bekommt 3 zufaellig aus einem Pool von 6
+gaengigen Gerichten ausgewaehlte Rezepte (z.B. Pfannkuchen, Nudeln, Ruehrei) und beschreibt pro Rezept
+frei aus dem Gedaechtnis in maximal einer Minute, wie man es zubereitet. Die Aufnahme wird per
+**OpenAI Whisper** transkribiert und per **OpenAI** in ein strukturiertes Rezept umgewandelt —
+(in der Regel bei zwei von drei Rezepten) mit einem gezielt eingebauten, praezise nachverfolgten
+Fehler versehen. Teilnehmende beurteilen, ob das Rezept korrekt ist, und koennen die vermutete
+Fehlerstelle markieren. Am Ende steht ein kurzer Fragebogen. Alle Daten landen strukturiert in
+Postgres (via Prisma) fuer die statistische Auswertung.
 
 Alle drei KI-Schritte (Transkription, Rezepterstellung, Fehler-Injektion) laufen ueber denselben
 OpenAI-Account. Die Whisper-Transkription kostet ca. $0.006 pro Minute Audio, die
@@ -15,9 +17,11 @@ im niedrigen einstelligen Dollarbereich.
 ## Ablauf
 
 1. **`/`** — Einwilligung + Mikrofonzugriff, legt einen `Participant` an.
-2. **`/study`** — Trial-Schleife: Rezept vorlesen -> transkribieren (Whisper) -> Rezept erzeugen (OpenAI,
-   mit Referenzrezept gegroundet) -> bei `FLAWED`-Trials gezielten Fehler einbauen (OpenAI + serverseitige
-   Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf. Fehlerstelle markieren.
+2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?", Ja/Nein
+   wird gespeichert) -> frei beschreiben (max. 1 Minute) -> transkribieren (Whisper) -> Rezept erzeugen
+   (OpenAI, rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler
+   einbauen (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf.
+   Fehlerstelle markieren.
 3. **`/questionnaire`** — Alter, Taetigkeit, Selbsteinschaetzung, LLM-Nutzung, Korrekturlese-Verhalten, Vertrauen in KI.
 4. **`/questionnaire/danke`** — Debriefing.
 
@@ -30,7 +34,7 @@ Siehe `prisma/schema.prisma` fuer das vollstaendige Datenmodell (`Participant`, 
 npm install
 cp .env.example .env   # DATABASE_URL, DIRECT_URL, OPENAI_API_KEY eintragen
 npx prisma migrate dev --name init
-npm run db:seed         # befuellt RecipePrompt mit ~8 Beispielrezepten
+npm run db:seed         # befuellt RecipePrompt mit dem 6-Gerichte-Pool
 npm run dev
 ```
 

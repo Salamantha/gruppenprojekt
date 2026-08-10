@@ -52,6 +52,5 @@ export async function POST(request: NextRequest) {
     order,
     totalTrials: TOTAL_TRIALS,
     promptTitle: prompt.title,
-    promptText: prompt.promptText,
   });
 }
