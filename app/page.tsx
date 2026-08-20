@@ -70,8 +70,7 @@ export default function WelcomePage() {
               <div>
                 <h2 className="font-bold text-gray-900 mb-1">Worum geht es?</h2>
                 <p>
-                  Wir untersuchen, wie gut Menschen Fehler in KI-generierten Texten erkennen — hier am Beispiel von
-                  Rezepten.
+                  Wir untersuchen, wie KI Rezepte aus gesprochenem Wort erstellt. 
                 </p>
               </div>
               <div>
@@ -79,13 +78,11 @@ export default function WelcomePage() {
                 <ul className="list-disc list-inside space-y-1">
                   <li>Du bekommst nacheinander 3 Gerichte gezeigt (z. B. „Pfannkuchen&rdquo;).</li>
                   <li>Für jedes sagst du kurz, ob du ein Rezept dafür kennst.</li>
-                  <li>Dann beschreibst du frei aus dem Gedächtnis, wie man es zubereitet — maximal 1 Minute.</li>
+                  <li>Dann beschreibst du frei aus dem Gedächtnis, wie man es zubereitet (maximal 1 Minute).</li>
                   <li>
-                    Eine KI wandelt deine Beschreibung automatisch in ein Rezept um. Manche Rezepte enthalten dabei
-                    absichtlich einen von der KI eingebauten Fehler (z. B. eine falsche Menge oder eine fehlende
-                    Zutat).
+                    Eine KI wandelt deine Beschreibung automatisch in ein Rezept um.
                   </li>
-                  <li>Du beurteilst, ob das Rezept richtig aussieht, und markierst ggf., wo du einen Fehler vermutest.</li>
+                  <li>Du beurteilst, ob das Rezept richtig aussieht, und markierst eventuelle Fehler.</li>
                   <li>Zum Schluss füllst du einen kurzen Fragebogen aus (ca. 1 Minute).</li>
                 </ul>
               </div>
@@ -94,7 +91,8 @@ export default function WelcomePage() {
                 <ul className="list-disc list-inside space-y-1">
                   <li>Die Teilnahme ist freiwillig, deine Daten werden anonymisiert ausgewertet.</li>
                   <li>Insgesamt dauert die Studie etwa 5–8 Minuten.</li>
-                  <li>Du brauchst ein funktionierendes Mikrofon — dafür gibt es unten einen kurzen, kostenlosen Test.</li>
+                  <li>Du musst 3 Rezepte kennen und beschreiben.</li>
+                  <li>Du brauchst ein funktionierendes Mikrofon, dafür gibt es unten einen kurzen Test.</li>
                 </ul>
               </div>
             </div>

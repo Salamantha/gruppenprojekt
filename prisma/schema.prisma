@@ -42,6 +42,8 @@ model Participant {
   createdAt         DateTime  @default(now())
   consentGivenAt    DateTime?
   completedAt       DateTime?
+  /// Set when the participant ran out of dishes they know (rejected the whole pool) and was excluded
+  excludedAt        DateTime?
   /// Pre-shuffled sequence of conditions, e.g. ["CONTROL","FLAWED",...], popped one per trial
   conditionSequence Json
   userAgent         String?
