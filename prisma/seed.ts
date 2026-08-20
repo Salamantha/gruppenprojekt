@@ -5,7 +5,20 @@ const prisma = new PrismaClient();
 // Pool of common German dishes. Each participant is randomly assigned 3 of
 // these (see lib/study.ts TOTAL_TRIALS) and freely describes, from memory,
 // how to make it — there's no reference recipe to ground against anymore.
-const DISH_TITLES = ["Pfannkuchen", "Nudeln mit Tomatensauce", "Rührei", "Kartoffelsalat", "Bratkartoffeln", "Pizza"];
+// Several are open-ended "Lieblings-X" categories (with examples baked into
+// the title) so participants can describe whichever variant they actually
+// know well, rather than being locked to one specific dish.
+const DISH_TITLES = [
+  "Pfannkuchen",
+  "Lieblings-Nudelsauce",
+  "Gulasch",
+  "Lieblingssuppe (z. B. Kartoffel-, Tomaten- oder Gemüsesuppe)",
+  "Chili sin Carne",
+  "Ein Salatrezept (z. B. Caesar Salad, Nudelsalat, Kartoffelsalat)",
+  "Frikadellen",
+  "Lieblingskuchen (z. B. Apfel- oder Schokokuchen)",
+  "Lieblings-Reisgericht (z. B. Sushi, Thai Curry, gebratener Reis)",
+];
 
 async function main() {
   for (const title of DISH_TITLES) {

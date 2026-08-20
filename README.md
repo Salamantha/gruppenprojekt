@@ -1,8 +1,12 @@
 # Rezept-Studie 
 
-Eine mobile-first Next.js-Studien-App: Jede:r Teilnehmende bekommt 3 zufaellig aus einem Pool von 6
-gaengigen Gerichten ausgewaehlte Rezepte (z.B. Pfannkuchen, Nudeln, Ruehrei) und beschreibt pro Rezept
-frei aus dem Gedaechtnis in maximal einer Minute, wie man es zubereitet. Die Aufnahme wird per
+Eine mobile-first Next.js-Studien-App: Jede:r Teilnehmende bekommt 3 zufaellig aus einem Pool von 9
+gaengigen Gerichten ausgewaehlte Rezepte (z.B. Pfannkuchen, Gulasch, Lieblings-Nudelsauce) und beschreibt
+pro Rezept frei aus dem Gedaechtnis in maximal einer Minute, wie man es zubereitet. Kennt jemand ein
+Gericht nicht, wird automatisch ein anderes aus dem Pool angeboten, sodass am Ende immer 3 bekannte
+Rezepte beschrieben werden. Vor dem Start gibt es einen kostenlosen, rein lokalen Mikrofon-Test, und nach
+jeder Aufnahme kann sie beliebig oft verworfen und neu aufgenommen werden, bevor sie hochgeladen wird
+(kostet also nichts, solange noch nichts abgeschickt wurde). Die Aufnahme wird per
 **OpenAI Whisper** transkribiert und per **OpenAI** in ein strukturiertes Rezept umgewandelt —
 (in der Regel bei zwei von drei Rezepten) mit einem gezielt eingebauten, praezise nachverfolgten
 Fehler versehen. Teilnehmende beurteilen, ob das Rezept korrekt ist, und koennen die vermutete
@@ -16,13 +20,17 @@ im niedrigen einstelligen Dollarbereich.
 
 ## Ablauf
 
-1. **`/`** — Einwilligung + Mikrofonzugriff, legt einen `Participant` an.
-2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?", Ja/Nein
-   wird gespeichert) -> frei beschreiben (max. 1 Minute) -> transkribieren (Whisper) -> Rezept erzeugen
-   (OpenAI, rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler
-   einbauen (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf.
-   Fehlerstelle markieren.
-3. **`/questionnaire`** — Alter, Taetigkeit, Selbsteinschaetzung, LLM-Nutzung, Korrekturlese-Verhalten, Vertrauen in KI.
+1. **`/`** — ausfuehrlichere (aber kompakte, scrollbare) Erklaerung des Ablaufs, Einwilligung,
+   Mikrofonzugriff + lokaler Mikrofon-Test (kein Upload), legt einen `Participant` an.
+2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?") ->
+   bei "Nein" automatisch ein anderes, noch nicht angebotenes Gericht aus dem Pool vorschlagen (loop, bis
+   "Ja" oder Pool erschoepft) -> frei beschreiben (max. 1 Minute) -> Aufnahme anhoeren, optional beliebig
+   oft neu aufnehmen (kostenlos, vor dem Absenden) -> transkribieren (Whisper) -> Rezept erzeugen (OpenAI,
+   rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler einbauen
+   (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf. Fehlerstelle
+   markieren.
+3. **`/questionnaire`** — Alter, Taetigkeit, Selbsteinschaetzung (Fehlererkennung), LLM-Nutzung,
+   Korrekturlese-Verhalten, Vertrauen in die inhaltliche Richtigkeit von KI-generierten Texten.
 4. **`/questionnaire/danke`** — Debriefing.
 
 Siehe `prisma/schema.prisma` fuer das vollstaendige Datenmodell (`Participant`, `RecipePrompt`, `Trial`,
@@ -34,7 +42,7 @@ Siehe `prisma/schema.prisma` fuer das vollstaendige Datenmodell (`Participant`, 
 npm install
 cp .env.example .env   # DATABASE_URL, DIRECT_URL, OPENAI_API_KEY eintragen
 npx prisma migrate dev --name init
-npm run db:seed         # befuellt RecipePrompt mit dem 6-Gerichte-Pool
+npm run db:seed         # befuellt RecipePrompt mit dem 9-Gerichte-Pool
 npm run dev
 ```
 

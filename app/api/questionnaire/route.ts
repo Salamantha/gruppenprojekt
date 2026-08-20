@@ -5,11 +5,10 @@ interface QuestionnaireBody {
   participantId: string;
   ageRange: string;
   occupationCategory: string;
-  selfRatedCookingSkill: number;
   selfRatedPerformance: number;
   llmUsageFrequency: string;
   proofreadsLlmOutput: string;
-  trustInAiAccuracy: number;
+  trustInAiContent: string;
   additionalComments?: string;
 }
 
@@ -17,11 +16,10 @@ const REQUIRED_FIELDS: (keyof QuestionnaireBody)[] = [
   "participantId",
   "ageRange",
   "occupationCategory",
-  "selfRatedCookingSkill",
   "selfRatedPerformance",
   "llmUsageFrequency",
   "proofreadsLlmOutput",
-  "trustInAiAccuracy",
+  "trustInAiContent",
 ];
 
 export async function POST(request: NextRequest) {
@@ -42,22 +40,20 @@ export async function POST(request: NextRequest) {
     update: {
       ageRange: body.ageRange!,
       occupationCategory: body.occupationCategory!,
-      selfRatedCookingSkill: body.selfRatedCookingSkill!,
       selfRatedPerformance: body.selfRatedPerformance!,
       llmUsageFrequency: body.llmUsageFrequency!,
       proofreadsLlmOutput: body.proofreadsLlmOutput!,
-      trustInAiAccuracy: body.trustInAiAccuracy!,
+      trustInAiContent: body.trustInAiContent!,
       additionalComments: body.additionalComments ?? null,
     },
     create: {
       participantId: body.participantId!,
       ageRange: body.ageRange!,
       occupationCategory: body.occupationCategory!,
-      selfRatedCookingSkill: body.selfRatedCookingSkill!,
       selfRatedPerformance: body.selfRatedPerformance!,
       llmUsageFrequency: body.llmUsageFrequency!,
       proofreadsLlmOutput: body.proofreadsLlmOutput!,
-      trustInAiAccuracy: body.trustInAiAccuracy!,
+      trustInAiContent: body.trustInAiContent!,
       additionalComments: body.additionalComments ?? null,
     },
   });

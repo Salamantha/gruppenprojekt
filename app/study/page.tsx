@@ -5,16 +5,32 @@ import { useRouter } from "next/navigation";
 import RecordButton from "@/components/RecordButton";
 import RecipeReviewCard from "@/components/RecipeReviewCard";
 import ProgressIndicator from "@/components/ProgressIndicator";
+import AudioPreview from "@/components/AudioPreview";
 import { getStoredParticipantId } from "@/lib/session";
 import type { FlaggedItem, Recipe } from "@/types/recipe";
 
-type Phase = "init" | "prompt" | "transcribing" | "generating" | "reviewing" | "submitting" | "error";
+type Phase =
+  | "init"
+  | "prompt"
+  | "swapping"
+  | "confirming"
+  | "transcribing"
+  | "generating"
+  | "reviewing"
+  | "submitting"
+  | "error";
 
 interface TrialState {
   trialId: string;
   order: number;
   totalTrials: number;
   promptTitle: string;
+}
+
+interface PendingRecording {
+  blob: Blob;
+  mimeType: string;
+  durationMs: number;
 }
 
 export default function StudyPage() {
@@ -28,6 +44,7 @@ export default function StudyPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryNotice, setRetryNotice] = useState<string | null>(null);
   const [knowsRecipe, setKnowsRecipe] = useState<boolean | null>(null);
+  const [pendingRecording, setPendingRecording] = useState<PendingRecording | null>(null);
 
   const loadNextTrial = useCallback(
     async (pid: string) => {
@@ -38,6 +55,7 @@ export default function StudyPage() {
       setErrorMessage(null);
       setRetryNotice(null);
       setKnowsRecipe(null);
+      setPendingRecording(null);
       try {
         const res = await fetch("/api/trials", {
           method: "POST",
@@ -73,8 +91,36 @@ export default function StudyPage() {
     if (participantId) loadNextTrial(participantId);
   }, [participantId, loadNextTrial]);
 
-  const handleRecordingComplete = async (blob: Blob, mimeType: string, durationMs: number) => {
+  const handleSwapReject = async () => {
     if (!trial) return;
+    setPhase("swapping");
+    try {
+      const res = await fetch(`/api/trials/${trial.trialId}/swap-prompt`, { method: "POST" });
+      if (!res.ok) throw new Error("swap failed");
+      const data = (await res.json()) as { promptTitle: string; exhausted: boolean };
+      setTrial((t) => (t ? { ...t, promptTitle: data.promptTitle } : t));
+      setKnowsRecipe(data.exhausted ? false : null);
+      setPhase("prompt");
+    } catch {
+      setErrorMessage("Es gab ein Problem beim Wechseln des Gerichts.");
+      setPhase("error");
+    }
+  };
+
+  const handleRecordingReady = (blob: Blob, mimeType: string, durationMs: number) => {
+    setPendingRecording({ blob, mimeType, durationMs });
+    setPhase("confirming");
+  };
+
+  const discardRecording = () => {
+    setPendingRecording(null);
+    setPhase("prompt");
+  };
+
+  const confirmAndUpload = async () => {
+    if (!trial || !pendingRecording) return;
+    const { blob, mimeType, durationMs } = pendingRecording;
+    setPendingRecording(null);
     setPhase("transcribing");
     setRetryNotice(null);
     try {
@@ -89,7 +135,9 @@ export default function StudyPage() {
         body: form,
       });
       if (transcribeRes.status === 422) {
-        setRetryNotice("Wir konnten leider keine verständliche Sprache erkennen. Bitte sprich näher am Mikrofon und lies den Text noch einmal laut vor.");
+        setRetryNotice(
+          "Wir konnten leider keine verständliche Sprache erkennen. Bitte sprich näher am Mikrofon und versuche es noch einmal."
+        );
         setPhase("prompt");
         return;
       }
@@ -174,7 +222,7 @@ export default function StudyPage() {
                   Ja
                 </button>
                 <button
-                  onClick={() => setKnowsRecipe(false)}
+                  onClick={handleSwapReject}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold"
                 >
                   Nein
@@ -195,9 +243,37 @@ export default function StudyPage() {
                   {retryNotice}
                 </p>
               )}
-              <RecordButton onRecordingComplete={handleRecordingComplete} />
+              <RecordButton onRecordingComplete={handleRecordingReady} />
             </>
           )}
+        </div>
+      )}
+
+      {phase === "swapping" && (
+        <Centered>
+          <p className="text-blue-600 font-semibold animate-pulse">Wechsle Gericht…</p>
+        </Centered>
+      )}
+
+      {phase === "confirming" && pendingRecording && (
+        <div className="w-full max-w-xl bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center gap-4">
+          <h2 className="text-lg font-bold text-center">Deine Aufnahme</h2>
+          <p className="text-sm text-gray-500 text-center">Hör sie dir kurz an — bist du zufrieden?</p>
+          <AudioPreview blob={pendingRecording.blob} />
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={discardRecording}
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold"
+            >
+              Neu aufnehmen
+            </button>
+            <button
+              onClick={confirmAndUpload}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold"
+            >
+              Absenden
+            </button>
+          </div>
         </div>
       )}
 

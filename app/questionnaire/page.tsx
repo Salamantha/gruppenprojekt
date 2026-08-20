@@ -9,6 +9,7 @@ const AGE_RANGES = ["unter 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65
 const OCCUPATIONS = ["Schüler:in", "Student:in", "Angestellt", "Selbstständig", "Arbeitssuchend", "Rentner:in", "Sonstiges"];
 const LLM_FREQUENCIES = ["Nie", "Selten", "Monatlich", "Wöchentlich", "Täglich"];
 const PROOFREAD_OPTIONS = ["Immer", "Meistens", "Manchmal", "Selten", "Nie"];
+const TRUST_OPTIONS = ["Gar nicht", "Eher nicht", "Neutral", "Eher schon", "Voll und Ganz"];
 
 export default function QuestionnairePage() {
   const router = useRouter();
@@ -16,11 +17,10 @@ export default function QuestionnairePage() {
 
   const [ageRange, setAgeRange] = useState("");
   const [occupationCategory, setOccupationCategory] = useState("");
-  const [selfRatedCookingSkill, setSelfRatedCookingSkill] = useState<number | null>(null);
   const [selfRatedPerformance, setSelfRatedPerformance] = useState<number | null>(null);
   const [llmUsageFrequency, setLlmUsageFrequency] = useState("");
   const [proofreadsLlmOutput, setProofreadsLlmOutput] = useState("");
-  const [trustInAiAccuracy, setTrustInAiAccuracy] = useState<number | null>(null);
+  const [trustInAiContent, setTrustInAiContent] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -38,11 +38,10 @@ export default function QuestionnairePage() {
   const isComplete =
     ageRange &&
     occupationCategory &&
-    selfRatedCookingSkill !== null &&
     selfRatedPerformance !== null &&
     llmUsageFrequency &&
     proofreadsLlmOutput &&
-    trustInAiAccuracy !== null;
+    trustInAiContent;
 
   const handleSubmit = async () => {
     if (!participantId || !isComplete) return;
@@ -56,11 +55,10 @@ export default function QuestionnairePage() {
           participantId,
           ageRange,
           occupationCategory,
-          selfRatedCookingSkill,
           selfRatedPerformance,
           llmUsageFrequency,
           proofreadsLlmOutput,
-          trustInAiAccuracy,
+          trustInAiContent,
           additionalComments: additionalComments || undefined,
         }),
       });
@@ -114,15 +112,6 @@ export default function QuestionnairePage() {
         </div>
 
         <LikertQuestion
-          label="Wie gut schätzt du deine eigenen Kochkenntnisse ein?"
-          name="cookingSkill"
-          value={selfRatedCookingSkill}
-          onChange={setSelfRatedCookingSkill}
-          lowLabel="sehr schlecht"
-          highLabel="sehr gut"
-        />
-
-        <LikertQuestion
           label="Wie gut denkst du, hast du bei der Erkennung von Fehlern in den Rezepten abgeschnitten?"
           name="performance"
           value={selfRatedPerformance}
@@ -167,14 +156,23 @@ export default function QuestionnairePage() {
           </select>
         </div>
 
-        <LikertQuestion
-          label="Wie sehr vertraust du generell der inhaltlichen Genauigkeit von KI-generierten Texten?"
-          name="trust"
-          value={trustInAiAccuracy}
-          onChange={setTrustInAiAccuracy}
-          lowLabel="gar nicht"
-          highLabel="voll und ganz"
-        />
+        <div className="mb-6">
+          <label className="font-semibold text-gray-900 block mb-2">
+            Wenn du Text durch KI generieren lässt, wie sehr vertraust du darauf, dass der Inhalt stimmt?
+          </label>
+          <select
+            value={trustInAiContent}
+            onChange={(e) => setTrustInAiContent(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-3"
+          >
+            <option value="">Bitte wählen</option>
+            {TRUST_OPTIONS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="mb-6">
           <label className="font-semibold text-gray-900 block mb-2">Sonstige Anmerkungen (optional)</label>

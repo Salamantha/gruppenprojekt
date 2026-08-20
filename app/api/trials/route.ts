@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
   const participant = await prisma.participant.findUnique({
     where: { id: participantId },
-    include: { trials: { select: { promptId: true } } },
+    include: { trials: { select: { promptId: true, rejectedPromptIds: true } } },
   });
   if (!participant) {
     return NextResponse.json({ error: "Participant not found" }, { status: 404 });
@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No condition assigned for this trial" }, { status: 500 });
   }
 
-  const usedPromptIds = participant.trials.map((t) => t.promptId);
+  const usedPromptIds = participant.trials.flatMap((t) => [
+    t.promptId,
+    ...(t.rejectedPromptIds as string[]),
+  ]);
   const availablePrompts = await prisma.recipePrompt.findMany({
     where: { isActive: true, id: { notIn: usedPromptIds } },
   });

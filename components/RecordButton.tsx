@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { pickSupportedMimeType } from "@/lib/audio";
 
 interface RecordButtonProps {
   disabled?: boolean;
@@ -8,15 +9,6 @@ interface RecordButtonProps {
 }
 
 const MAX_RECORDING_MS = 60_000;
-
-function pickMimeType(): string {
-  if (typeof MediaRecorder === "undefined") return "";
-  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/aac"];
-  for (const candidate of candidates) {
-    if (MediaRecorder.isTypeSupported(candidate)) return candidate;
-  }
-  return "";
-}
 
 function formatRemaining(ms: number): string {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
@@ -56,7 +48,7 @@ export default function RecordButton({ disabled, onRecordingComplete }: RecordBu
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = pickMimeType();
+      const mimeType = pickSupportedMimeType();
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       chunksRef.current = [];
 

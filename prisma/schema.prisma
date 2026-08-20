@@ -72,6 +72,9 @@ model Trial {
 
   /// Self-reported: did the participant say they know a recipe for this dish, before recording
   participantKnowsRecipe Boolean?
+  /// RecipePrompt ids this participant rejected ("Nein") for this trial slot, including
+  /// the currently-superseded promptId each time a swap happens. Never re-offered again.
+  rejectedPromptIds Json @default("[]")
 
   audioMimeType   String?
   audioDurationMs Int?
@@ -118,17 +121,18 @@ model QuestionnaireResponse {
   participantId String      @unique
   participant   Participant @relation(fields: [participantId], references: [id])
 
-  ageRange              String
-  occupationCategory    String
-  selfRatedCookingSkill Int
+  ageRange           String
+  occupationCategory String
   /// "Wie gut denken Sie, haben Sie abgeschnitten?" 1-5
   selfRatedPerformance Int
   /// Nie | Selten | Monatlich | Woechentlich | Taeglich
   llmUsageFrequency String
   /// Immer | Meistens | Manchmal | Selten | Nie
   proofreadsLlmOutput String
-  trustInAiAccuracy   Int
-  additionalComments  String? @db.Text
+  /// "Wenn du Text durch KI generieren laesst, wie sehr vertraust du darauf, dass der Inhalt stimmt?"
+  /// Gar nicht | Eher nicht | Neutral | Eher schon | Voll und Ganz
+  trustInAiContent  String
+  additionalComments String? @db.Text
 
   createdAt DateTime @default(now())
 }

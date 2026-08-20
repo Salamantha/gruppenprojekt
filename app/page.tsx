@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import MicTest from "@/components/MicTest";
 import { getStoredParticipantId, setStoredParticipantId, clearStoredParticipantId } from "@/lib/session";
 
 export default function WelcomePage() {
@@ -65,13 +66,38 @@ export default function WelcomePage() {
           </div>
         ) : (
           <div className="space-y-5">
-            <p className="text-gray-600 text-sm leading-relaxed">
-              In dieser Studie liest du mehrere kurze Rezepte laut vor. Deine Aufnahme wird automatisch in Text
-              umgewandelt und daraus ein Rezept erstellt. Anschließend beurteilst du, ob das erstellte Rezept
-              korrekt ist. Am Ende bitten wir dich um ein paar kurze Angaben zu deiner Person. Die Teilnahme ist
-              freiwillig, deine Daten werden anonymisiert für Forschungszwecke im Rahmen einer Universitätsstudie
-              ausgewertet.
-            </p>
+            <div className="max-h-64 overflow-y-auto pr-1 border border-gray-100 rounded-lg p-4 text-sm text-gray-700 leading-relaxed space-y-3">
+              <div>
+                <h2 className="font-bold text-gray-900 mb-1">Worum geht es?</h2>
+                <p>
+                  Wir untersuchen, wie gut Menschen Fehler in KI-generierten Texten erkennen — hier am Beispiel von
+                  Rezepten.
+                </p>
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 mb-1">Ablauf</h2>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Du bekommst nacheinander 3 Gerichte gezeigt (z. B. „Pfannkuchen&rdquo;).</li>
+                  <li>Für jedes sagst du kurz, ob du ein Rezept dafür kennst.</li>
+                  <li>Dann beschreibst du frei aus dem Gedächtnis, wie man es zubereitet — maximal 1 Minute.</li>
+                  <li>
+                    Eine KI wandelt deine Beschreibung automatisch in ein Rezept um. Manche Rezepte enthalten dabei
+                    absichtlich einen von der KI eingebauten Fehler (z. B. eine falsche Menge oder eine fehlende
+                    Zutat).
+                  </li>
+                  <li>Du beurteilst, ob das Rezept richtig aussieht, und markierst ggf., wo du einen Fehler vermutest.</li>
+                  <li>Zum Schluss füllst du einen kurzen Fragebogen aus (ca. 1 Minute).</li>
+                </ul>
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 mb-1">Gut zu wissen</h2>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Die Teilnahme ist freiwillig, deine Daten werden anonymisiert ausgewertet.</li>
+                  <li>Insgesamt dauert die Studie etwa 5–8 Minuten.</li>
+                  <li>Du brauchst ein funktionierendes Mikrofon — dafür gibt es unten einen kurzen, kostenlosen Test.</li>
+                </ul>
+              </div>
+            </div>
 
             <label className="flex items-start gap-2 text-sm text-gray-700">
               <input
@@ -91,7 +117,10 @@ export default function WelcomePage() {
                 Mikrofonzugriff erlauben
               </button>
             ) : (
-              <p className="text-sm text-green-700">✓ Mikrofonzugriff erteilt</p>
+              <>
+                <p className="text-sm text-green-700">✓ Mikrofonzugriff erteilt</p>
+                <MicTest />
+              </>
             )}
 
             {micError && <p className="text-sm text-red-600">{micError}</p>}
