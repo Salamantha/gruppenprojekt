@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateCleanRecipe } from "@/lib/openai";
 import { generateFlawedRecipe } from "@/lib/mistakes";
-import type { Recipe } from "@/types/recipe";
+import type { MistakeType, Recipe } from "@/types/recipe";
 
 export const maxDuration = 60;
 
@@ -28,15 +28,7 @@ export async function POST(
 
     let displayRecipe: Recipe = cleanRecipe;
     let mistakeData = {
-      mistakeType: null as
-        | "WRONG_QUANTITY"
-        | "WRONG_UNIT"
-        | "OMITTED_INGREDIENT"
-        | "OMITTED_STEP"
-        | "HALLUCINATED_INGREDIENT"
-        | "HALLUCINATED_STEP"
-        | "WRONG_TIME_OR_TEMPERATURE"
-        | null,
+      mistakeType: null as MistakeType | null,
       mistakeTargetField: null as "INGREDIENT" | "STEP" | null,
       mistakeTargetIndex: null as number | null,
       mistakeSubfield: null as string | null,

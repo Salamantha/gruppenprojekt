@@ -41,6 +41,7 @@ const flawedRecipeJsonSchema = {
           enum: [
             "WRONG_QUANTITY",
             "WRONG_UNIT",
+            "WRONG_INGREDIENT_NAME",
             "OMITTED_INGREDIENT",
             "OMITTED_STEP",
             "HALLUCINATED_INGREDIENT",
@@ -106,6 +107,8 @@ const MISTAKE_INSTRUCTIONS: Record<MistakeTarget["type"], string> = {
     "Ändere ausschließlich die Mengenangabe (quantity) dieser Zutat auf einen plausiblen, aber falschen Wert. Name und Einheit bleiben exakt gleich.",
   WRONG_UNIT:
     "Ändere ausschließlich die Einheit (unit) dieser Zutat auf eine plausible, aber falsche Einheit. Name und Menge bleiben exakt gleich.",
+  WRONG_INGREDIENT_NAME:
+    "Ändere ausschließlich den Namen (name) dieser Zutat auf eine andere, plausible aber falsche Zutat (z.B. eine geschmacklich oder farblich ähnliche Zutat). Menge und Einheit bleiben exakt gleich.",
   OMITTED_INGREDIENT:
     "Entferne genau diese Zutat vollständig aus der Zutatenliste. Alle anderen Zutaten bleiben exakt gleich und in gleicher Reihenfolge.",
   OMITTED_STEP:

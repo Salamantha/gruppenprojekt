@@ -38,14 +38,20 @@ export async function POST(
       where: { id: trialId },
       data: { rejectedPromptIds: newRejected },
     });
-    // Rejected the entire pool of dishes they were offered — exclude them
-    // from the study rather than forcing them to describe something they
-    // said they don't know.
-    await prisma.participant.update({
-      where: { id: trial.participantId },
-      data: { excludedAt: new Date() },
-    });
-    return NextResponse.json({ promptTitle: trial.prompt.title, exhausted: true });
+
+    if (trial.order === 1) {
+      // Rejected the entire pool on their very first trial — they don't know any
+      // of the dishes at all, so exclude them from the study.
+      await prisma.participant.update({
+        where: { id: trial.participantId },
+        data: { excludedAt: new Date() },
+      });
+      return NextResponse.json({ promptTitle: trial.prompt.title, exhausted: true, excluded: true });
+    }
+
+    // They already completed at least one valid trial — that's usable data,
+    // so send them straight to the questionnaire instead of excluding them.
+    return NextResponse.json({ promptTitle: trial.prompt.title, exhausted: true, excluded: false });
   }
 
   const newPrompt = candidates[Math.floor(Math.random() * candidates.length)];

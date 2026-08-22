@@ -58,7 +58,7 @@ function isSubsequenceRemovingIndex<T>(
  */
 export function pickMistakeTarget(clean: Recipe): MistakeTarget {
   const candidates: MistakeType[] = [];
-  if (clean.ingredients.length >= 1) candidates.push("WRONG_QUANTITY", "WRONG_UNIT");
+  if (clean.ingredients.length >= 1) candidates.push("WRONG_QUANTITY", "WRONG_UNIT", "WRONG_INGREDIENT_NAME");
   if (clean.ingredients.length >= 2) candidates.push("OMITTED_INGREDIENT");
   candidates.push("HALLUCINATED_INGREDIENT");
   if (clean.steps.length >= 2) candidates.push("OMITTED_STEP");
@@ -70,6 +70,7 @@ export function pickMistakeTarget(clean: Recipe): MistakeTarget {
   switch (type) {
     case "WRONG_QUANTITY":
     case "WRONG_UNIT":
+    case "WRONG_INGREDIENT_NAME":
     case "OMITTED_INGREDIENT":
       return {
         type,
@@ -139,6 +140,23 @@ function validateAndDeriveMistake(
         subfield,
         original_value: before[subfield],
         new_value: after[subfield],
+      };
+    }
+    case "WRONG_INGREDIENT_NAME": {
+      if (!ingredientsEqualExcept(clean.ingredients, flawed.ingredients, targetIndex)) return null;
+      const before = clean.ingredients[targetIndex];
+      const after = flawed.ingredients[targetIndex];
+      if (!before || !after) return null;
+      if (before.name === after.name) return null; // must actually differ
+      if (before.quantity !== after.quantity) return null;
+      if (before.unit !== after.unit) return null;
+      return {
+        type,
+        target_field: "ingredient",
+        target_index: targetIndex,
+        subfield: "name",
+        original_value: before.name,
+        new_value: after.name,
       };
     }
     case "OMITTED_INGREDIENT": {

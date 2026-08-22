@@ -99,10 +99,16 @@ export default function StudyPage() {
     try {
       const res = await fetch(`/api/trials/${trial.trialId}/swap-prompt`, { method: "POST" });
       if (!res.ok) throw new Error("swap failed");
-      const data = (await res.json()) as { promptTitle: string; exhausted: boolean };
+      const data = (await res.json()) as { promptTitle: string; exhausted: boolean; excluded: boolean };
       if (data.exhausted) {
-        clearStoredParticipantId();
-        router.push("/excluded");
+        if (data.excluded) {
+          clearStoredParticipantId();
+          router.push("/excluded");
+        } else {
+          // Already have at least one valid trial — that's usable data, so
+          // move on to the questionnaire instead of forcing a second dish.
+          router.push("/questionnaire");
+        }
         return;
       }
       setTrial((t) => (t ? { ...t, promptTitle: data.promptTitle } : t));
@@ -176,6 +182,11 @@ export default function StudyPage() {
     setFlaggedItems((prev) =>
       prev.map((f) => (f.field === item.field && f.index === item.index ? { ...f, reason } : f))
     );
+  };
+
+  const backToJaNein = () => {
+    setAnsweredNein(false);
+    setFlaggedItems([]);
   };
 
   const submitAnswer = async (isFlawed: boolean, items: FlaggedItem[]) => {
@@ -349,16 +360,24 @@ export default function StudyPage() {
                 {!canSubmitFlags && (
                   <p className="text-xs text-amber-700 text-center mb-3">
                     Für „Weiter&rdquo; muss mindestens eine Stelle markiert und zu jeder Markierung eine Begründung
-                    gewählt sein.
+                    gewählt sein. Ist das Rezept doch richtig? Dann geh zurück und wähle „Ja&rdquo;.
                   </p>
                 )}
-                <button
-                  onClick={() => submitAnswer(true, flaggedItems)}
-                  disabled={!canSubmitFlags}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:pointer-events-none text-white py-3 rounded-xl font-bold"
-                >
-                  Weiter
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={backToJaNein}
+                    className="flex-1 border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 py-3 rounded-xl font-bold"
+                  >
+                    Zurück
+                  </button>
+                  <button
+                    onClick={() => submitAnswer(true, flaggedItems)}
+                    disabled={!canSubmitFlags}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:pointer-events-none text-white py-3 rounded-xl font-bold"
+                  >
+                    Weiter
+                  </button>
+                </div>
               </>
             )}
           </div>

@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
   const mistakeTypes = [
     "WRONG_QUANTITY",
     "WRONG_UNIT",
+    "WRONG_INGREDIENT_NAME",
     "OMITTED_INGREDIENT",
     "OMITTED_STEP",
     "HALLUCINATED_INGREDIENT",

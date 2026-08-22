@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "MistakeType" ADD VALUE 'WRONG_INGREDIENT_NAME';

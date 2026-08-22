@@ -18,6 +18,7 @@ export type Recipe = z.infer<typeof RecipeSchema>;
 export const MISTAKE_TYPES = [
   "WRONG_QUANTITY",
   "WRONG_UNIT",
+  "WRONG_INGREDIENT_NAME",
   "OMITTED_INGREDIENT",
   "OMITTED_STEP",
   "HALLUCINATED_INGREDIENT",
@@ -50,7 +51,20 @@ export const FlawedRecipeSchema = RecipeSchema.extend({
 
 export type FlawedRecipe = z.infer<typeof FlawedRecipeSchema>;
 
-export const REVIEW_REASONS = [...MISTAKE_TYPES, "OTHER"] as const;
+// Participant-facing reasons. Not a 1:1 mirror of MISTAKE_TYPES: WRONG_QUANTITY and
+// WRONG_UNIT are merged into one "Menge ist falsch" option (participants generally
+// can't distinguish "wrong number" from "wrong unit" apart), while every other
+// actually-injectable type gets its own reason so it always has a matching option.
+export const REVIEW_REASONS = [
+  "WRONG_QUANTITY_OR_UNIT",
+  "WRONG_INGREDIENT_NAME",
+  "OMITTED_INGREDIENT",
+  "OMITTED_STEP",
+  "HALLUCINATED_INGREDIENT",
+  "HALLUCINATED_STEP",
+  "WRONG_TIME_OR_TEMPERATURE",
+  "OTHER",
+] as const;
 export type ReviewReason = (typeof REVIEW_REASONS)[number];
 
 /** What the participant marked as suspicious. index === -1 is the "etwas fehlt" (something's missing) meta-flag. */

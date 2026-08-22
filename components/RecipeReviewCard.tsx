@@ -16,8 +16,8 @@ interface ReasonOption {
 }
 
 const INGREDIENT_REASONS: ReasonOption[] = [
-  { value: "WRONG_QUANTITY", label: "Menge ist falsch" },
-  { value: "WRONG_UNIT", label: "Einheit ist falsch" },
+  { value: "WRONG_QUANTITY_OR_UNIT", label: "Menge ist falsch" },
+  { value: "WRONG_INGREDIENT_NAME", label: "Zutat ist falsch" },
   { value: "HALLUCINATED_INGREDIENT", label: "Zutat gehört nicht in das Rezept" },
   { value: "OTHER", label: "Anderer Grund" },
 ];
@@ -25,11 +25,8 @@ const INGREDIENT_REASONS: ReasonOption[] = [
 const STEP_REASONS: ReasonOption[] = [
   { value: "WRONG_TIME_OR_TEMPERATURE", label: "Zeit oder Temperatur ist falsch" },
   { value: "HALLUCINATED_STEP", label: "Schritt gehört nicht in das Rezept" },
-  { value: "OTHER", label: "Inhalt des Schritts ist falsch / anderer Grund" },
+  { value: "OTHER", label: "Anderer Grund" },
 ];
-
-const MISSING_INGREDIENT_REASON: ReasonOption[] = [{ value: "OMITTED_INGREDIENT", label: "Eine Zutat fehlt" }];
-const MISSING_STEP_REASON: ReasonOption[] = [{ value: "OMITTED_STEP", label: "Ein Arbeitsschritt fehlt" }];
 
 function getFlaggedItem(
   flaggedItems: FlaggedItem[],
@@ -49,6 +46,7 @@ function Row({
   item,
   flaggedItem,
   reasonOptions,
+  autoReason,
   onToggleFlag,
   onReasonChange,
 }: {
@@ -56,7 +54,9 @@ function Row({
   flagging: boolean;
   item: FlaggedItem;
   flaggedItem?: FlaggedItem;
-  reasonOptions: ReasonOption[];
+  /** If set, there's only ever one possible reason for this row — skip the dropdown and apply it directly. */
+  autoReason?: ReviewReason;
+  reasonOptions?: ReasonOption[];
   onToggleFlag: (item: FlaggedItem) => void;
   onReasonChange: (item: FlaggedItem, reason: ReviewReason) => void;
 }) {
@@ -74,7 +74,7 @@ function Row({
     >
       <button
         type="button"
-        onClick={() => onToggleFlag(item)}
+        onClick={() => onToggleFlag(autoReason ? { ...item, reason: autoReason } : item)}
         className={`w-full text-left py-3 px-3 rounded-lg transition-colors ${
           flagged ? "text-red-900" : "hover:bg-gray-50 active:bg-gray-100"
         }`}
@@ -82,7 +82,7 @@ function Row({
         {children}
       </button>
 
-      {flagged && (
+      {flagged && !autoReason && reasonOptions && (
         <div className="px-3 pb-3">
           <label className="block text-xs font-semibold text-gray-600 mb-1.5">Warum ist diese Stelle auffällig?</label>
           <select
@@ -140,7 +140,7 @@ export default function RecipeReviewCard({
               flagging
               item={{ field: "INGREDIENT", index: -1 }}
               flaggedItem={getFlaggedItem(flaggedItems, "INGREDIENT", -1)}
-              reasonOptions={MISSING_INGREDIENT_REASON}
+              autoReason="OMITTED_INGREDIENT"
               onToggleFlag={onToggleFlag}
               onReasonChange={onReasonChange}
             >
@@ -174,7 +174,7 @@ export default function RecipeReviewCard({
               flagging
               item={{ field: "STEP", index: -1 }}
               flaggedItem={getFlaggedItem(flaggedItems, "STEP", -1)}
-              reasonOptions={MISSING_STEP_REASON}
+              autoReason="OMITTED_STEP"
               onToggleFlag={onToggleFlag}
               onReasonChange={onReasonChange}
             >

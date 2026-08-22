@@ -56,6 +56,8 @@ type DashboardData = {
 const MISTAKE_LABELS: Record<string, string> = {
   WRONG_QUANTITY: "Falsche Menge",
   WRONG_UNIT: "Falsche Einheit",
+  WRONG_QUANTITY_OR_UNIT: "Menge/Einheit falsch",
+  WRONG_INGREDIENT_NAME: "Zutat falsch (ausgetauscht)",
   OMITTED_INGREDIENT: "Zutat fehlt",
   OMITTED_STEP: "Schritt fehlt",
   HALLUCINATED_INGREDIENT: "Erfundene Zutat",
