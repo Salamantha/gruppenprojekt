@@ -8,16 +8,19 @@ const prisma = new PrismaClient();
 // Several are open-ended "Lieblings-X" categories (with examples baked into
 // the title) so participants can describe whichever variant they actually
 // know well, rather than being locked to one specific dish.
+// Possessives ("deine"/"deinen"/"dein") are baked in with the correct German
+// grammatical gender/case, so "Kennst du ein Rezept für {title}?" and
+// "wie man {title} zubereitet" both read fluently for every entry.
 const DISH_TITLES = [
   "Pfannkuchen",
-  "Lieblings-Nudelsauce",
+  "deine Lieblings-Nudelsauce",
   "Gulasch",
-  "Lieblingssuppe (z. B. Kartoffel-, Tomaten- oder Gemüsesuppe)",
+  "deine Lieblingssuppe (z. B. Kartoffel-, Tomaten- oder Gemüsesuppe)",
   "Chili sin Carne",
-  "Ein Salatrezept (z. B. Caesar Salad, Nudelsalat, Kartoffelsalat)",
+  "deinen Lieblingssalat (z. B. Caesar Salad, Nudelsalat, Kartoffelsalat)",
   "Frikadellen",
-  "Lieblingskuchen (z. B. Apfel- oder Schokokuchen)",
-  "Lieblings-Reisgericht (z. B. Sushi, Thai Curry, gebratener Reis)",
+  "deinen Lieblingskuchen (z. B. Apfel- oder Schokokuchen)",
+  "dein Lieblings-Reisgericht (z. B. Sushi, Thai Curry, gebratener Reis)",
 ];
 
 async function main() {

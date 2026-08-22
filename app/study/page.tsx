@@ -6,7 +6,7 @@ import RecordButton from "@/components/RecordButton";
 import RecipeReviewCard from "@/components/RecipeReviewCard";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import AudioPreview from "@/components/AudioPreview";
-import { getStoredParticipantId } from "@/lib/session";
+import { clearStoredParticipantId, getStoredParticipantId } from "@/lib/session";
 import type { FlaggedItem, Recipe } from "@/types/recipe";
 
 type Phase =
@@ -98,8 +98,13 @@ export default function StudyPage() {
       const res = await fetch(`/api/trials/${trial.trialId}/swap-prompt`, { method: "POST" });
       if (!res.ok) throw new Error("swap failed");
       const data = (await res.json()) as { promptTitle: string; exhausted: boolean };
+      if (data.exhausted) {
+        clearStoredParticipantId();
+        router.push("/excluded");
+        return;
+      }
       setTrial((t) => (t ? { ...t, promptTitle: data.promptTitle } : t));
-      setKnowsRecipe(data.exhausted ? false : null);
+      setKnowsRecipe(null);
       setPhase("prompt");
     } catch {
       setErrorMessage("Es gab ein Problem beim Wechseln des Gerichts.");
