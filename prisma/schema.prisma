@@ -72,7 +72,11 @@ model Trial {
 
   /// Self-reported: did the participant say they know a recipe for this dish, before recording
   participantKnowsRecipe Boolean?
+  /// IDs of recipe prompts the participant rejected with "Nein" before accepting one for this trial
+  rejectedPromptIds Json?
 
+  /// Number of completed recording attempts before the final audio was submitted
+  recordingAttempts Int @default(0)
   audioMimeType   String?
   audioDurationMs Int?
   rawTranscript   String? @db.Text

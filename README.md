@@ -17,11 +17,13 @@ im niedrigen einstelligen Dollarbereich.
 ## Ablauf
 
 1. **`/`** — Einwilligung + Mikrofonzugriff, legt einen `Participant` an.
-2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?", Ja/Nein
-   wird gespeichert) -> frei beschreiben (max. 1 Minute) -> transkribieren (Whisper) -> Rezept erzeugen
-   (OpenAI, rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler
-   einbauen (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf.
-   Fehlerstelle markieren.
+2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?").
+   Bei **Nein** wird im selben Trial ein anderes, noch nicht abgelehntes Gericht vorgeschlagen. Bei **Ja**
+   beschreibt die Person das Rezept frei (max. 1 Minute). Vor der KI-Verarbeitung kann sie die Aufnahme
+   anhoeren und bis zu **3-mal neu aufnehmen**. Danach: Whisper-Transkription -> Rezept erzeugen (OpenAI,
+   rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler einbauen
+   (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf. Fehlerstellen
+   markieren und fuer jede markierte Zeile eine **Begruendung auswaehlen**.
 3. **`/questionnaire`** — Alter, Taetigkeit, Selbsteinschaetzung, LLM-Nutzung, Korrekturlese-Verhalten, Vertrauen in KI.
 4. **`/questionnaire/danke`** — Debriefing.
 
@@ -53,10 +55,11 @@ echten Smartphone entweder ein Vercel-Preview-Deployment nutzen oder lokal per H
    gepoolte/ungepoolte Connection-Strings.
 3. Environment Variables setzen: `DATABASE_URL` (gepoolt), `DIRECT_URL` (ungepoolt, fuer Prisma-Migrationen),
    `OPENAI_API_KEY`, optional `ADMIN_EXPORT_TOKEN`.
-4. Lokal: `npx vercel env pull .env.local` → `npx prisma migrate deploy` → `npm run db:seed` (einmalig,
-   gegen die echte Datenbank).
+4. Als Vercel **Build Command** empfiehlt sich:
+   `npx prisma migrate deploy && npm run db:seed && npm run build`
+   Dadurch werden auch neue Migrationen (z.B. fuer Prompt-Ablehnungen und Aufnahmeversuche) automatisch angewendet.
 5. Deployen (Push auf `main`, oder `vercel --prod`).
-6. Auf einem echten Smartphone den kompletten Ablauf durchklicken (Mikrofon, Aufnahme, Review, Fragebogen).
+6. Auf einem echten Smartphone den kompletten Ablauf durchklicken (Mikrofon, Neuaufnahme, Review, Fragebogen).
 
 ## Datenexport
 

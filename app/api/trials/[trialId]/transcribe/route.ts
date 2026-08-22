@@ -25,10 +25,11 @@ export async function POST(
   const extension = audioMimeType.includes("mp4") ? "mp4" : audioMimeType.includes("aac") ? "aac" : "webm";
   const knowsRecipeRaw = formData.get("knowsRecipe");
   const participantKnowsRecipe = knowsRecipeRaw === null ? undefined : knowsRecipeRaw === "true";
+  const recordingAttempts = Math.max(1, Number(formData.get("recordingAttempts") ?? 1) || 1);
 
   console.log(
     `[transcribe] trial=${trialId} audioBytes=${audio.size} mimeType=${audioMimeType} ` +
-      `clientDurationMs=${audioDurationMs} knowsRecipe=${participantKnowsRecipe}`
+      `clientDurationMs=${audioDurationMs} knowsRecipe=${participantKnowsRecipe} recordingAttempts=${recordingAttempts}`
   );
 
   try {
@@ -43,6 +44,7 @@ export async function POST(
         audioMimeType,
         audioDurationMs,
         participantKnowsRecipe,
+        recordingAttempts,
         recordingEndedAt: new Date(),
         status: "TRANSCRIBED",
       },
