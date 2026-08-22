@@ -77,6 +77,8 @@ model Trial {
   /// RecipePrompt ids this participant rejected ("Nein") for this trial slot, including
   /// the currently-superseded promptId each time a swap happens. Never re-offered again.
   rejectedPromptIds Json @default("[]")
+  /// How many times the participant recorded (including discarded takes) before submitting
+  recordingAttempts Int @default(0)
 
   audioMimeType   String?
   audioDurationMs Int?

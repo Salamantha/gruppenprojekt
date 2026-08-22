@@ -32,6 +32,8 @@ const COLUMNS = [
   "isFalsePositive",
   "timeSpentReviewMs",
   "audioDurationMs",
+  "recordingAttempts",
+  "participantFlaggedItems",
 ] as const;
 
 export async function GET(request: NextRequest) {
@@ -72,6 +74,8 @@ export async function GET(request: NextRequest) {
       isFalsePositive: t.isFalsePositive,
       timeSpentReviewMs: t.timeSpentReviewMs,
       audioDurationMs: t.audioDurationMs,
+      recordingAttempts: t.recordingAttempts,
+      participantFlaggedItems: t.participantFlaggedItems,
     };
     return row;
   });

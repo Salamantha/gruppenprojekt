@@ -17,6 +17,9 @@ export async function POST(
   if (!trial) {
     return NextResponse.json({ error: "Trial not found" }, { status: 404 });
   }
+  if (trial.status !== "CREATED") {
+    return NextResponse.json({ error: "Prompt can only be changed before recording" }, { status: 400 });
+  }
 
   const rejectedSoFar = trial.rejectedPromptIds as string[];
   const newRejected = [...rejectedSoFar, trial.promptId];

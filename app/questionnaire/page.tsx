@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LikertQuestion from "@/components/LikertQuestion";
 import { getStoredParticipantId, clearStoredParticipantId } from "@/lib/session";
+import { TRUST_OPTIONS } from "@/lib/questionnaire-options";
 
 const AGE_RANGES = ["unter 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65 und älter"];
 const OCCUPATIONS = ["Schüler:in", "Student:in", "Angestellt", "Selbstständig", "Arbeitssuchend", "Rentner:in", "Sonstiges"];
 const LLM_FREQUENCIES = ["Nie", "Selten", "Monatlich", "Wöchentlich", "Täglich"];
 const PROOFREAD_OPTIONS = ["Immer", "Meistens", "Manchmal", "Selten", "Nie"];
-const TRUST_OPTIONS = ["Gar nicht", "Eher nicht", "Neutral", "Eher schon", "Voll und Ganz"];
 
 export default function QuestionnairePage() {
   const router = useRouter();

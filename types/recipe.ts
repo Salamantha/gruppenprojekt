@@ -50,10 +50,15 @@ export const FlawedRecipeSchema = RecipeSchema.extend({
 
 export type FlawedRecipe = z.infer<typeof FlawedRecipeSchema>;
 
+export const REVIEW_REASONS = [...MISTAKE_TYPES, "OTHER"] as const;
+export type ReviewReason = (typeof REVIEW_REASONS)[number];
+
 /** What the participant marked as suspicious. index === -1 is the "etwas fehlt" (something's missing) meta-flag. */
 export interface FlaggedItem {
   field: "INGREDIENT" | "STEP";
   index: number;
+  /** Participant-selected justification for why this row is suspicious. */
+  reason?: ReviewReason;
 }
 
 export interface MistakeTarget {

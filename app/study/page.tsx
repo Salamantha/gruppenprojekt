@@ -7,7 +7,7 @@ import RecipeReviewCard from "@/components/RecipeReviewCard";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import AudioPreview from "@/components/AudioPreview";
 import { clearStoredParticipantId, getStoredParticipantId } from "@/lib/session";
-import type { FlaggedItem, Recipe } from "@/types/recipe";
+import type { FlaggedItem, Recipe, ReviewReason } from "@/types/recipe";
 
 type Phase =
   | "init"
@@ -45,6 +45,7 @@ export default function StudyPage() {
   const [retryNotice, setRetryNotice] = useState<string | null>(null);
   const [knowsRecipe, setKnowsRecipe] = useState<boolean | null>(null);
   const [pendingRecording, setPendingRecording] = useState<PendingRecording | null>(null);
+  const [recordingAttempts, setRecordingAttempts] = useState(0);
 
   const loadNextTrial = useCallback(
     async (pid: string) => {
@@ -56,6 +57,7 @@ export default function StudyPage() {
       setRetryNotice(null);
       setKnowsRecipe(null);
       setPendingRecording(null);
+      setRecordingAttempts(0);
       try {
         const res = await fetch("/api/trials", {
           method: "POST",
@@ -113,6 +115,7 @@ export default function StudyPage() {
   };
 
   const handleRecordingReady = (blob: Blob, mimeType: string, durationMs: number) => {
+    setRecordingAttempts((n) => n + 1);
     setPendingRecording({ blob, mimeType, durationMs });
     setPhase("confirming");
   };
@@ -133,6 +136,7 @@ export default function StudyPage() {
       const ext = mimeType.includes("mp4") ? "mp4" : "webm";
       form.append("audio", blob, `recording.${ext}`);
       form.append("durationMs", String(durationMs));
+      form.append("recordingAttempts", String(recordingAttempts));
       if (knowsRecipe !== null) form.append("knowsRecipe", String(knowsRecipe));
 
       const transcribeRes = await fetch(`/api/trials/${trial.trialId}/transcribe`, {
@@ -166,6 +170,12 @@ export default function StudyPage() {
       if (exists) return prev.filter((f) => !(f.field === item.field && f.index === item.index));
       return [...prev, item];
     });
+  };
+
+  const updateReason = (item: FlaggedItem, reason: ReviewReason) => {
+    setFlaggedItems((prev) =>
+      prev.map((f) => (f.field === item.field && f.index === item.index ? { ...f, reason } : f))
+    );
   };
 
   const submitAnswer = async (isFlawed: boolean, items: FlaggedItem[]) => {
@@ -209,6 +219,8 @@ export default function StudyPage() {
       </Centered>
     );
   }
+
+  const canSubmitFlags = flaggedItems.length > 0 && flaggedItems.every((f) => Boolean(f.reason));
 
   return (
     <div className="min-h-screen bg-gray-50 text-black py-8 px-4 flex flex-col items-center gap-6">
@@ -307,6 +319,7 @@ export default function StudyPage() {
             flagging={answeredNein}
             flaggedItems={flaggedItems}
             onToggleFlag={toggleFlag}
+            onReasonChange={updateReason}
           />
 
           <div className="w-full max-w-xl bg-white p-5 rounded-2xl shadow-md border border-gray-100">
@@ -331,11 +344,18 @@ export default function StudyPage() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 text-center mb-4">
-                  Tippe auf die Stelle(n), die du für falsch hältst, und dann auf &bdquo;Weiter&ldquo;.
+                  Markiere die auffällige(n) Stelle(n) und wähle für jede markierte Stelle eine Begründung aus.
                 </p>
+                {!canSubmitFlags && (
+                  <p className="text-xs text-amber-700 text-center mb-3">
+                    Für „Weiter&rdquo; muss mindestens eine Stelle markiert und zu jeder Markierung eine Begründung
+                    gewählt sein.
+                  </p>
+                )}
                 <button
                   onClick={() => submitAnswer(true, flaggedItems)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold"
+                  disabled={!canSubmitFlags}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:pointer-events-none text-white py-3 rounded-xl font-bold"
                 >
                   Weiter
                 </button>

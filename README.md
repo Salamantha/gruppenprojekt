@@ -24,11 +24,12 @@ im niedrigen einstelligen Dollarbereich.
    Mikrofonzugriff + lokaler Mikrofon-Test (kein Upload), legt einen `Participant` an.
 2. **`/study`** — Trial-Schleife (3x): Gericht anzeigen ("Kennst du ein Rezept fuer Pfannkuchen?") ->
    bei "Nein" automatisch ein anderes, noch nicht angebotenes Gericht aus dem Pool vorschlagen (loop, bis
-   "Ja" oder Pool erschoepft) -> frei beschreiben (max. 1 Minute) -> Aufnahme anhoeren, optional beliebig
-   oft neu aufnehmen (kostenlos, vor dem Absenden) -> transkribieren (Whisper) -> Rezept erzeugen (OpenAI,
-   rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler einbauen
-   (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf. Fehlerstelle
-   markieren.
+   "Ja" oder Pool erschoepft — ist dann auch keine Alternative mehr da, wird die Person von der Studie
+   ausgeschlossen, siehe `/excluded`) -> frei beschreiben (max. 1 Minute) -> Aufnahme anhoeren, optional
+   beliebig oft neu aufnehmen (kostenlos, vor dem Absenden) -> transkribieren (Whisper) -> Rezept erzeugen
+   (OpenAI, rein aus der Beschreibung, kein Referenzrezept) -> bei `FLAWED`-Trials gezielten Fehler
+   einbauen (OpenAI + serverseitige Validierung/Retry/Fallback) -> "Ist dieses Rezept richtig?" -> ggf.
+   Fehlerstellen markieren und fuer jede markierte Stelle eine **Begruendung auswaehlen** (Pflichtfeld).
 3. **`/questionnaire`** — Alter, Taetigkeit, Selbsteinschaetzung (Fehlererkennung), LLM-Nutzung,
    Korrekturlese-Verhalten, Vertrauen in die inhaltliche Richtigkeit von KI-generierten Texten.
 4. **`/questionnaire/danke`** — Debriefing.
@@ -66,10 +67,18 @@ echten Smartphone entweder ein Vercel-Preview-Deployment nutzen oder lokal per H
 5. Deployen (Push auf `main`, oder `vercel --prod`).
 6. Auf einem echten Smartphone den kompletten Ablauf durchklicken (Mikrofon, Aufnahme, Review, Fragebogen).
 
-## Datenexport
+## Datenexport & Admin-Dashboard
 
 `GET /api/admin/export` liefert (mit `Authorization: Bearer <ADMIN_EXPORT_TOKEN>`) eine CSV-Datei mit
-einer Zeile pro Trial inkl. Fragebogen-Angaben — geeignet zum Import in SPSS/R.
+einer Zeile pro Trial inkl. Fragebogen-Angaben, Begruendungen und Aufnahmeversuchen — geeignet zum
+Import in SPSS/R.
+
+**`/admin`** ist ein geschuetztes Live-Dashboard (Token wird nur im `sessionStorage` des Browsers
+gehalten, kein separates Login). Zeigt Teilnehmende, Completion/Exclusion, Accuracy, Sensitivity,
+Specificity, False-Positive-Rate, Fehlerlokalisation, Pruefzeit und Aufnahmeversuche, Auswertungen nach
+Fehlertyp/Gericht/KI-Vertrauen sowie eine Kreuztabelle der gewaehlten Begruendungen gegen den tatsaechlich
+eingebauten Fehlertyp. FLAWED-Trials mit technischem Generierungs-Fallback werden aus den Kernquoten
+ausgeschlossen und separat ausgewiesen. CSV-Download direkt aus dem Dashboard moeglich.
 
 ## Umgebungsvariablen
 
